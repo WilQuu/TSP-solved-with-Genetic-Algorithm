@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include<string>
 #include<cstdlib>
@@ -54,6 +54,97 @@ int countCost(int* path, int citiesNum, int** cityMatrix) {
     return cost;
 }
 
+void inversion_mutation(int* path, int citiesNum) {
+    int firstIndex = rand() % (citiesNum-1) + 1;
+    int secondIndex = rand() % (citiesNum - 1) + 1;
+    if (firstIndex == secondIndex)
+        inversion_mutation(path, citiesNum);
+    else {
+        if (firstIndex > secondIndex)
+            swap(firstIndex, secondIndex);
+        cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+        for (int low = firstIndex, high = secondIndex; low < high; low++, high--) {
+            swap(path[low], path[high]);
+        }
+
+    }
+
+}
+bool contain(int* arr,int value, int start,int end) {
+    for (int i = start; i <= end; i++) {
+        if (arr[i] == value) {
+            return true;
+        }
+    }
+    return false;
+}
+void order_crossover(int* firstPath,int* secondPath,int* newPath,int citiesNum) {
+    int firstIndex = rand() % (citiesNum-1) + 1;
+    int secondIndex = rand() % (citiesNum - 1) + 1;
+    if (firstIndex == secondIndex)
+        order_crossover(firstPath,secondPath,newPath, citiesNum);
+    else {
+        //firstIndex = 1;
+        if (firstIndex > secondIndex)
+            swap(firstIndex, secondIndex);
+        cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+        // copied random area from firstPath to new path
+        for (int i = firstIndex; i <= secondIndex; i++)
+            newPath[i] = firstPath[i];
+
+
+        bool copyTrue = true;
+       // copyArray(newPath, firstPath, citiesNum + 1);
+        int positionOfSecondPathIndex = secondIndex + 1;
+        int positionOfFirstPathIndex = positionOfSecondPathIndex;
+        if (firstIndex == 1 && secondIndex == citiesNum - 1)
+            copyTrue = false;
+
+        if (secondIndex == citiesNum - 1) {
+            positionOfFirstPathIndex = 1;
+            positionOfSecondPathIndex = 1;
+        }
+
+
+        while (copyTrue) {
+
+            if (positionOfFirstPathIndex > firstIndex) {
+                while (contain(firstPath, secondPath[positionOfSecondPathIndex], firstIndex, secondIndex)) {
+                    positionOfSecondPathIndex++;
+                    if (positionOfSecondPathIndex == citiesNum) {
+                        positionOfSecondPathIndex= 1;
+                    }
+                }
+                newPath[positionOfFirstPathIndex] = secondPath[positionOfSecondPathIndex];
+            }else if (positionOfFirstPathIndex < firstIndex) {
+                while (contain(firstPath, secondPath[positionOfSecondPathIndex], firstIndex, secondIndex)) {
+                    positionOfSecondPathIndex++;
+                    if (positionOfSecondPathIndex >= citiesNum) {
+                        positionOfSecondPathIndex = 1;
+                    }
+                }
+                newPath[positionOfFirstPathIndex] = secondPath[positionOfSecondPathIndex];
+            }
+            positionOfFirstPathIndex++;
+            positionOfSecondPathIndex++;
+            if (positionOfSecondPathIndex >= citiesNum) {
+                positionOfSecondPathIndex = 1;
+            }
+            if (positionOfFirstPathIndex >= citiesNum)
+                positionOfFirstPathIndex = 1;
+
+            if (positionOfFirstPathIndex == firstIndex)
+                copyTrue = false;
+
+        }
+
+    }
+
+
+
+}
+
+
 int main() {
     srand(time(NULL));
     fstream file;
@@ -102,24 +193,48 @@ int main() {
         }
 
         /*    deklarowanie zmiennych potrzebnych do wykonania algorytmu   */
+        int* path = new int[citiesNum + 1];
+        int* secondPath = new int[citiesNum + 1];
+        for (int i = 0; i < citiesNum; i++) {
+            path[i] = i;
+            secondPath[i] = i;
+        }
+        path[citiesNum] = 0;
+        secondPath[citiesNum] = 0;
 
         clock_t start = clock();
-      
+        int* newPath = new int[citiesNum + 1];
+        newPath[citiesNum] = 0;
+        newPath[0] = 0;
         /*   tutaj zaczyna sie algorytm GA    */
-          
-
+        for (int i = 0; i < 200; i++) {
+            cout << i << " : iteration" << endl;
+            cout << "first path below :" << endl;
+            printPath(path, citiesNum + 1);
+            randomPath(secondPath, citiesNum);
+            cout << "second path below :" << endl;
+            printPath(secondPath, citiesNum + 1);
+            cout << "new path below :" << endl;
+            order_crossover(path, secondPath, newPath, citiesNum);
+            printPath(newPath, citiesNum + 1);
+        }   
 
         /*   tutaj konczy  sie algorytm GA      */
 
         clock_t stop = clock();
-        
-        cout << "Time : " << stop - start << " [s]" << endl;
+
+        double  elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
+        cout << elapsed << " [s]" << endl;
 
         /*        zwalnianie pamieci               */
         for (int i = 0; i < citiesNum; i++)
             delete[] cityMatrix[i];
         delete[]cityMatrix;
 
+        delete[]path;
+        delete[]newPath;
+        delete[]secondPath;
+        cout << "end" << endl;
     }
     else cerr << "Dostep do pliku zostal zabroniony!" << endl;
 
