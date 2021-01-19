@@ -10,7 +10,8 @@
 #include<vector>
 using namespace std;
 
-void randomPath(int* path, int citiesNum) {
+int* randomPath( int citiesNum) {
+    int* path = new int[citiesNum + 1];
     vector<int> tempNums;
     for (int i = 1; i < citiesNum; i++)
         tempNums.push_back(i);
@@ -27,6 +28,7 @@ void randomPath(int* path, int citiesNum) {
         tempNums.erase(it);
 
     }
+    return path;
 }
 
 void printPath(int arr[], int size) {
@@ -144,6 +146,25 @@ void order_crossover(int* firstPath,int* secondPath,int* newPath,int citiesNum) 
 
 }
 
+double fitness_function(int* path,int citiesNum) {
+    double fitness_function_value = 0;
+   
+    return fitness_function_value;
+}
+
+/*void base_population_generate(int citiesNum,int** population) {
+    int* path = new int[citiesNum + 1];
+    for (int i = 0; i < citiesNum; i++)
+        path[i] = i;
+    path[citiesNum] = 0;
+    for (int i = 0; i < citiesNum; i++) {
+        randomPath(path, citiesNum);
+        printPath(path, citiesNum + 1);
+        population[i] = path;
+    }
+    delete[]path;
+}*/
+
 
 int main() {
     srand(time(NULL));
@@ -206,18 +227,24 @@ int main() {
         int* newPath = new int[citiesNum + 1];
         newPath[citiesNum] = 0;
         newPath[0] = 0;
+
+        
         /*   tutaj zaczyna sie algorytm GA    */
-        for (int i = 0; i < 200; i++) {
-            cout << i << " : iteration" << endl;
-            cout << "first path below :" << endl;
-            printPath(path, citiesNum + 1);
-            randomPath(secondPath, citiesNum);
-            cout << "second path below :" << endl;
-            printPath(secondPath, citiesNum + 1);
-            cout << "new path below :" << endl;
-            order_crossover(path, secondPath, newPath, citiesNum);
-            printPath(newPath, citiesNum + 1);
-        }   
+
+        vector<int*>population;
+            for (int i = 0; i <citiesNum; i++) {
+                population.push_back(randomPath(citiesNum));
+            }
+       
+        cout << "-----------------------------------" << endl;
+        for (int i = 0; i < population.size(); i++) {
+            printPath(population.at(i), citiesNum + 1);
+        }
+
+        int iterationsNum = 0;
+        while (iterationsNum < citiesNum * citiesNum) {
+
+        }
 
         /*   tutaj konczy  sie algorytm GA      */
 
