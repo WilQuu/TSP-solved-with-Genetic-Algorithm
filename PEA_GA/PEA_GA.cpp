@@ -10,7 +10,7 @@
 #include<vector>
 using namespace std;
 
-int* randomPath( int citiesNum) {
+int* randomPath(int citiesNum) {
     int* path = new int[citiesNum + 1];
     vector<int> tempNums;
     for (int i = 1; i < citiesNum; i++)
@@ -146,25 +146,77 @@ void order_crossover(int* firstPath,int* secondPath,int* newPath,int citiesNum) 
 
 }
 
-double fitness_function(int* path,int citiesNum) {
-    double fitness_function_value = 0;
-   
+double fitness_function(int* path,int citiesNum,int** cityMatrix) {
+    double fitness_function_value = 1;
+    fitness_function_value = fitness_function_value / double(countCost(path,citiesNum,cityMatrix));
+
     return fitness_function_value;
 }
 
-/*void base_population_generate(int citiesNum,int** population) {
-    int* path = new int[citiesNum + 1];
-    for (int i = 0; i < citiesNum; i++)
-        path[i] = i;
-    path[citiesNum] = 0;
-    for (int i = 0; i < citiesNum; i++) {
-        randomPath(path, citiesNum);
-        printPath(path, citiesNum + 1);
-        population[i] = path;
+bool compare_arrays(int* arrA, int* arrB,int size) {
+    for (int i = 0; i < size; i++) {
+        if (arrA[i] != arrB[i])
+            return false;
     }
-    delete[]path;
-}*/
+    
+    return true;
+}
 
+void tournament_selection(int* firstPath, int* secondPath, vector<int*> population, int citiesNum, int** cityMatrix) {
+    int firstIndex = rand() % population.size();
+    int secondIndex = rand() % population.size();
+    if (firstIndex == secondIndex)
+        tournament_selection(firstPath, secondPath, population, citiesNum, cityMatrix);
+    else {
+        /* selekcjonowanie 1 osobnika */
+        if (firstIndex > secondIndex)
+            swap(firstIndex, secondIndex);
+        cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+        int* bestPath = new int[citiesNum + 1];
+        copyArray(bestPath, population.at(firstIndex), citiesNum + 1);
+        double best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+      
+
+        for (int i = firstIndex; i <= secondIndex; i++) {
+            if (fitness_function(population.at(i), citiesNum, cityMatrix) > best_fitness_value) {
+                best_fitness_value = fitness_function(population.at(i), citiesNum, cityMatrix);
+                copyArray(bestPath, population.at(i), citiesNum + 1);
+            }
+        }
+        copyArray(firstPath, bestPath, citiesNum + 1);
+
+
+        /* selekcjonowanie 2 osobnika */
+
+        do {
+            firstIndex = rand() % population.size();
+            secondIndex = rand() % population.size();
+        } while (firstIndex == secondIndex);
+
+        if (firstIndex > secondIndex)
+            swap(firstIndex, secondIndex);
+
+        cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+        if (compare_arrays(population.at(firstIndex), firstPath, citiesNum + 1)) {
+            copyArray(bestPath, population.at(firstIndex + 1), citiesNum + 1);
+            best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+        }
+        else {
+            copyArray(bestPath, population.at(firstIndex), citiesNum + 1);
+            best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+        }
+
+        for (int i = firstIndex; i <= secondIndex; i++) {
+            if (fitness_function(population.at(i), citiesNum, cityMatrix) > best_fitness_value && !compare_arrays(firstPath, population.at(i), citiesNum + 1)) {
+                copyArray(bestPath, population.at(i), citiesNum + 1);
+                best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+            }
+        }
+        copyArray(secondPath, bestPath, citiesNum + 1);
+
+        delete[]bestPath;
+    }
+}
 
 int main() {
     srand(time(NULL));
@@ -231,20 +283,27 @@ int main() {
         
         /*   tutaj zaczyna sie algorytm GA    */
 
+        /* inicjalizacja populacji poczatkowej */
+
         vector<int*>population;
             for (int i = 0; i <citiesNum; i++) {
                 population.push_back(randomPath(citiesNum));
             }
+            tournament_selection(secondPath, path, population, citiesNum, cityMatrix);
+            printPath(secondPath, citiesNum + 1);
+            cout << "fitness_value : "<< fitness_function(secondPath,citiesNum,cityMatrix)<<endl;
+            printPath(path, citiesNum + 1);
+            cout << "fitness_value : " << fitness_function(path, citiesNum, cityMatrix) << endl;
+            cout << "---------------------------------" << endl;
+            for (int i = 0; i < population.size(); i++) {
+                cout << "iteration : " << i << endl;
+                printPath(population.at(i), citiesNum + 1);
+                cout << "fitness_value : " << fitness_function(population.at(i), citiesNum, cityMatrix) << endl;
+                cout << "---------------------------------" << endl;
+            }
+            
+
        
-        cout << "-----------------------------------" << endl;
-        for (int i = 0; i < population.size(); i++) {
-            printPath(population.at(i), citiesNum + 1);
-        }
-
-        int iterationsNum = 0;
-        while (iterationsNum < citiesNum * citiesNum) {
-
-        }
 
         /*   tutaj konczy  sie algorytm GA      */
 
