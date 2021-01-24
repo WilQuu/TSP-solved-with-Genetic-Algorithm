@@ -11,35 +11,34 @@
 #include <algorithm>
 using namespace std;
 
-int* randomPath(int citiesNum) {
-    int* path = new int[citiesNum + 1];
+vector<unsigned> random_path(int citiesNum) {
+    vector<unsigned> random_path;
     vector<int> tempNums;
     for (int i = 1; i < citiesNum; i++)
         tempNums.push_back(i);
 
-    path[0] = 0;
-    path[citiesNum] = 0;
+    random_path.push_back(0);
     int currentVertex;
-    vector<int> cleaningVector;
     for (int i = 1; i < citiesNum; i++) {
         currentVertex = rand() % tempNums.size();
         vector<int>::iterator it;
         it = tempNums.begin() + currentVertex;
-        path[i] = tempNums.at(currentVertex);
+        random_path.push_back(tempNums.at(currentVertex));
         tempNums.erase(it);
 
     }
-    return path;
+    random_path.push_back(0);
+    return random_path;
 }
 
-void printPath(int arr[], int size) {
+void printPath(vector<unsigned> path) {
 
-    for (int i = 0; i < size; i++) {
-        if (i == size - 1) {
-            cout << arr[i] << endl;
+    for (int i = 0; i < path.size(); i++) {
+        if (i == path.size() - 1) {
+            cout << path.at(i) << endl;
         }
         else
-            cout << arr[i] << " -> ";
+            cout << path.at(i) << " -> ";
 
     }
 }
@@ -48,65 +47,80 @@ void copyArray(int* arrA, int* arrB, int size) {
         arrA[i] = arrB[i];
 }
 
-int countCost(int* path, int citiesNum, int** cityMatrix) {
+int count_cost(vector<unsigned> path, int** cityMatrix) {
     int cost = 0;
-    for (int i = 0; i < citiesNum; i++) {
-        cost += cityMatrix[path[i]][path[i + 1]];
+    for (int i = 0; i < path.size()-1; i++) {
+        cost += cityMatrix[path.at(i)][path.at(i + 1)];
+      //  cout << "add " << cityMatrix[path.at(i)][path.at(i + 1)] << " from :" << path.at(i) << " to : " << path.at(i + 1) << endl;
     }
-    cost += cityMatrix[path[citiesNum]][path[0]];
+
+    cost += cityMatrix[path.at(path.size()-1)][path.at(0)];
+    //cout << "add " << cityMatrix[path.at(path.size() - 2)][path.at(0)] << " from :" << path.at(path.size() - 2)<<" to :" << path.at(0) << endl;
     return cost;
 }
 
-void inversion_mutation(int* path, int citiesNum) {
-    int firstIndex = rand() % (citiesNum-1) + 1;
-    int secondIndex = rand() % (citiesNum - 1) + 1;
-    if (firstIndex == secondIndex)
-        inversion_mutation(path, citiesNum);
-    else {
-        if (firstIndex > secondIndex)
-            swap(firstIndex, secondIndex);
-        //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+void inversion_mutation(vector<unsigned>& path) {
+    int firstIndex, secondIndex;
+    do {
+        firstIndex = rand() % (path.size() - 2) + 1;
+        secondIndex = rand() % (path.size() - 2) + 1;
+    } while (firstIndex == secondIndex);
+
+    if (firstIndex > secondIndex)
+        swap(firstIndex, secondIndex);
+
+    //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
         for (int low = firstIndex, high = secondIndex; low < high; low++, high--) {
             swap(path[low], path[high]);
-        }
-
-    }
-
+        } 
 }
-bool contain(int* arr,int value, int start,int end) {
+
+void swap_mutation(vector<unsigned>& path) {
+    int firstIndex, secondIndex;
+    do {
+        firstIndex = rand() % (path.size()-2)+1;
+        secondIndex = rand() % (path.size()-2)+1;
+    } while (firstIndex == secondIndex);
+
+    if (firstIndex > secondIndex)
+        swap(firstIndex, secondIndex);
+
+    //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+    swap(path.at(firstIndex), path.at(secondIndex));
+}
+bool contain(vector<unsigned> vec,int value, int start,int end) {
     for (int i = start; i <= end; i++) {
-        if (arr[i] == value) {
+        if (vec.at(i) == value) {
             return true;
         }
     }
     return false;
 }
-int* order_crossover(int* firstPath,int* secondPath,int citiesNum) {
-    int* newPath = new int[citiesNum + 1];
-    newPath[0] = 0;
-    newPath[citiesNum] = 0;
-    int firstIndex = rand() % (citiesNum-1) + 1;
-    int secondIndex = rand() % (citiesNum - 1) + 1;
-    if (firstIndex == secondIndex)
-        order_crossover(firstPath,secondPath, citiesNum);
-    else {
-        //firstIndex = 1;
-        if (firstIndex > secondIndex)
-            swap(firstIndex, secondIndex);
-        //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
-        // copied random area from firstPath to new path
-        for (int i = firstIndex; i <= secondIndex; i++)
-            newPath[i] = firstPath[i];
+
+vector<unsigned>order_crossover(vector<unsigned> first_path,vector<unsigned> second_path) {
+    vector<unsigned> new_path= random_path(first_path.size() - 1);
+    int firstIndex, secondIndex;
+    do {
+        firstIndex = rand() % (first_path.size() - 2) + 1;
+        secondIndex = rand() % (first_path.size() - 2) + 1;
+    } while (firstIndex == secondIndex);
+
+    if (firstIndex > secondIndex)
+        swap(firstIndex, secondIndex);
+
+  //  cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+    // copied random area from firstPath to new path
+    for (int i = firstIndex; i <= secondIndex; i++)
+            new_path.at(i) = first_path.at(i);
 
 
         bool copyTrue = true;
-       // copyArray(newPath, firstPath, citiesNum + 1);
         int positionOfSecondPathIndex = secondIndex + 1;
         int positionOfFirstPathIndex = positionOfSecondPathIndex;
-        if (firstIndex == 1 && secondIndex == citiesNum - 1)
+        if (firstIndex == 1 && secondIndex == first_path.size() - 2)
             copyTrue = false;
 
-        if (secondIndex == citiesNum - 1) {
+        if (secondIndex == first_path.size() - 2) {
             positionOfFirstPathIndex = 1;
             positionOfSecondPathIndex = 1;
         }
@@ -115,28 +129,28 @@ int* order_crossover(int* firstPath,int* secondPath,int citiesNum) {
         while (copyTrue) {
 
             if (positionOfFirstPathIndex > firstIndex) {
-                while (contain(firstPath, secondPath[positionOfSecondPathIndex], firstIndex, secondIndex)) {
+                while (contain(first_path, second_path[positionOfSecondPathIndex], firstIndex, secondIndex)) {
                     positionOfSecondPathIndex++;
-                    if (positionOfSecondPathIndex == citiesNum) {
+                    if (positionOfSecondPathIndex == first_path.size()-1) {
                         positionOfSecondPathIndex= 1;
                     }
                 }
-                newPath[positionOfFirstPathIndex] = secondPath[positionOfSecondPathIndex];
+                new_path[positionOfFirstPathIndex] = second_path[positionOfSecondPathIndex];
             }else if (positionOfFirstPathIndex < firstIndex) {
-                while (contain(firstPath, secondPath[positionOfSecondPathIndex], firstIndex, secondIndex)) {
+                while (contain(first_path, second_path[positionOfSecondPathIndex], firstIndex, secondIndex)) {
                     positionOfSecondPathIndex++;
-                    if (positionOfSecondPathIndex >= citiesNum) {
+                    if (positionOfSecondPathIndex >= first_path.size()-1) {
                         positionOfSecondPathIndex = 1;
                     }
                 }
-                newPath[positionOfFirstPathIndex] = secondPath[positionOfSecondPathIndex];
+                new_path[positionOfFirstPathIndex] = second_path[positionOfSecondPathIndex];
             }
             positionOfFirstPathIndex++;
             positionOfSecondPathIndex++;
-            if (positionOfSecondPathIndex >= citiesNum) {
+            if (positionOfSecondPathIndex >= first_path.size()-1) {
                 positionOfSecondPathIndex = 1;
             }
-            if (positionOfFirstPathIndex >= citiesNum)
+            if (positionOfFirstPathIndex >= first_path.size()-1)
                 positionOfFirstPathIndex = 1;
 
             if (positionOfFirstPathIndex == firstIndex)
@@ -144,94 +158,116 @@ int* order_crossover(int* firstPath,int* secondPath,int citiesNum) {
 
         }
 
-    }
+    
 
-    return newPath;
+    return new_path;
 
 }
 
-double fitness_function(int* path,int citiesNum,int** cityMatrix) {
+double fitness_function(vector<unsigned> path,int** cityMatrix) {
     double fitness_function_value = 1;
-    fitness_function_value = fitness_function_value / double(countCost(path,citiesNum,cityMatrix));
+    fitness_function_value = fitness_function_value / double(count_cost(path,cityMatrix));
 
     return fitness_function_value;
 }
 
-bool compare_arrays(int* arrA, int* arrB,int size) {
-    for (int i = 0; i < size; i++) {
-        if (arrA[i] != arrB[i])
+bool compare_paths(vector<unsigned> vec_a,vector<unsigned> vec_b) {
+    for (int i = 0; i < vec_a.size(); i++) {
+        if (vec_a.at(i) != vec_b.at(i))
             return false;
     }
     
     return true;
 }
+bool if_exists(vector<vector<unsigned>> population, vector<unsigned> path) {
+    for (int i = 0; i < population.size(); i++) {
+        if (compare_paths(population.at(i), path))
+            return true;
+    }
+    return false;
+}
+void tournament_selection_parents(vector<unsigned>& first_path, vector<unsigned>& second_path, vector<vector<unsigned>>& population, int** cityMatrix) {
+    int firstIndex, secondIndex;
+    do {
+        firstIndex = rand() % population.size();
+        secondIndex = rand() % population.size();
+    } while (firstIndex == secondIndex);
 
-void tournament_selection_parents(int* firstPath, int* secondPath, vector<int*> population, int citiesNum, int** cityMatrix) {
-    int firstIndex = rand() % population.size();
-    int secondIndex = rand() % population.size();
-    if (firstIndex == secondIndex)
-        tournament_selection_parents(firstPath, secondPath, population, citiesNum, cityMatrix);
-    else {
+    if (firstIndex > secondIndex)
+        swap(firstIndex, secondIndex);
+
+//    cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
         /* selekcjonowanie 1 osobnika */
-        if (firstIndex > secondIndex)
-            swap(firstIndex, secondIndex);
-        //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
-        int* bestPath = new int[citiesNum + 1];
-        copyArray(bestPath, population.at(firstIndex), citiesNum + 1);
-        double best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
-      
-
-        for (int i = firstIndex; i <= secondIndex; i++) {
-            if (fitness_function(population.at(i), citiesNum, cityMatrix) > best_fitness_value) {
-                best_fitness_value = fitness_function(population.at(i), citiesNum, cityMatrix);
-                copyArray(bestPath, population.at(i), citiesNum + 1);
-            }
+    vector<unsigned> best_path;
+    best_path = population.at(firstIndex);
+    double best_fitness_value = fitness_function(best_path,cityMatrix);
+    int index_of_path_in_population = firstIndex;
+    for (int i = firstIndex; i <= secondIndex; i++) {
+        if (fitness_function(population.at(i),cityMatrix) > best_fitness_value) {
+            best_fitness_value = fitness_function(population.at(i), cityMatrix);
+            best_path = population.at(i);
+            index_of_path_in_population = i;
         }
-        copyArray(firstPath, bestPath, citiesNum + 1);
+    }
+    first_path = best_path;
+    //population.erase(population.begin() + index_of_path_in_population);
 
 
-        /* selekcjonowanie 2 osobnika */
-
+    /* selekcjonowanie 2 osobnika */
+        
         do {
             firstIndex = rand() % population.size();
             secondIndex = rand() % population.size();
         } while (firstIndex == secondIndex);
 
         if (firstIndex > secondIndex)
-            swap(firstIndex, secondIndex);
+            swap(firstIndex, secondIndex); 
 
-        //cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
-        if (compare_arrays(population.at(firstIndex), firstPath, citiesNum + 1)) {
-            copyArray(bestPath, population.at(firstIndex + 1), citiesNum + 1);
-            best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+       // cout << firstIndex << " <-first index--second index ->" << secondIndex << endl;
+        if (compare_paths(population.at(firstIndex), first_path)) {
+            best_path = population.at(firstIndex + 1);
+            best_fitness_value = fitness_function(best_path,cityMatrix);
+            index_of_path_in_population = firstIndex + 1;
         }
         else {
-            copyArray(bestPath, population.at(firstIndex), citiesNum + 1);
-            best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+            best_path = population.at(firstIndex);
+            best_fitness_value = fitness_function(best_path,cityMatrix);
+            index_of_path_in_population = firstIndex;
         }
 
         for (int i = firstIndex; i <= secondIndex; i++) {
-            if (fitness_function(population.at(i), citiesNum, cityMatrix) > best_fitness_value && !compare_arrays(firstPath, population.at(i), citiesNum + 1)) {
-                copyArray(bestPath, population.at(i), citiesNum + 1);
-                best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
+            if (fitness_function(population.at(i), cityMatrix) > best_fitness_value && !compare_paths(first_path, population.at(i))) {
+                best_fitness_value = fitness_function(population.at(i), cityMatrix);
+                best_path = population.at(i);
+                index_of_path_in_population = i;
             }
         }
-        copyArray(secondPath, bestPath, citiesNum + 1);
-
-        delete[]bestPath;
-    }
+        second_path = best_path;
+        //population.erase(population.begin() + index_of_path_in_population);
+        //cout << "i work " << endl;
 }
+
 int* pass_arr(int* arr, int size) {
     int* new_arr = new int[size];
     copyArray(new_arr, arr, size);
 
     return new_arr;
 }
-/* do przetestowania */
-vector<int*> tournament_selection(vector<int*> population,int citiesNum,int** cityMatrix) {
-    vector<int*> next_generation_population;
+
+bool time_stop(clock_t start_time,clock_t now_time, double max_time) {
+    double  elapsed = (double)(now_time - start_time) / CLOCKS_PER_SEC;
+    if (max_time > elapsed)
+        return true;
+    else
+        return false;
+}
+
+vector<vector<unsigned>> tournament_selection(vector<vector<unsigned>>& population,int** cityMatrix,int citiesNum) {
+    vector<vector<unsigned>> next_generation_population;
     int temp_size = 0;
-    int firstIndex, secondIndex;
+    int firstIndex, secondIndex, index_of_path;
+    double best_fitness_value;
+
     while (temp_size < citiesNum) {
         do {
             firstIndex = rand() % population.size();
@@ -241,26 +277,67 @@ vector<int*> tournament_selection(vector<int*> population,int citiesNum,int** ci
         if (firstIndex > secondIndex)
             swap(firstIndex, secondIndex);
 
-        int* bestPath = new int[citiesNum + 1];
-        copyArray(bestPath, population.at(firstIndex), citiesNum + 1);
-        double best_fitness_value = fitness_function(bestPath, citiesNum, cityMatrix);
-        int index_of_path = firstIndex;
+        vector<unsigned> best_path;
+        best_path = population.at(firstIndex);
+        best_fitness_value = fitness_function(best_path, cityMatrix);
+        index_of_path = firstIndex;
 
         for (int i = firstIndex; i <= secondIndex; i++) {
-            if (fitness_function(population.at(i), citiesNum, cityMatrix) > best_fitness_value) {
-                best_fitness_value = fitness_function(population.at(i), citiesNum, cityMatrix);
-                copyArray(bestPath, population.at(i), citiesNum + 1);
+            if (fitness_function(population.at(i), cityMatrix) > best_fitness_value ) {
+                best_fitness_value = fitness_function(population.at(i), cityMatrix);
+                best_path = population.at(i);
                 index_of_path = i;
             }
         }
-        next_generation_population.push_back(pass_arr(bestPath,citiesNum+1));
+        if (!if_exists(next_generation_population, best_path))
+                next_generation_population.push_back(best_path);
+
         population.erase(population.begin() + index_of_path);
 
         temp_size++;
-        delete[]bestPath;
+        //cout << temp_size << endl;
     }
+    //cout << population.size() << " population size" << endl;
     return next_generation_population;
 }
+vector<unsigned> get_best_path(vector<vector<unsigned>> population, int** cityMatrix) {
+    vector<unsigned> best_path;
+    best_path = population.at(0);
+    for (int i = 1; i < population.size(); i++) {
+        if (fitness_function(best_path, cityMatrix) < fitness_function(population.at(i), cityMatrix))
+            best_path = population.at(i);
+    }
+    return best_path;
+}
+vector<vector<unsigned>> custom_selection(vector<vector<unsigned>>& population,int** cityMatrix,int population_size) {
+    vector<vector<unsigned>> new_population;
+    vector<unsigned> best_path;
+    best_path = population.at(0);
+    int index_of_path;
+    while (new_population.size() < population_size ) {
+        best_path = population.at(0);
+        index_of_path = 0;
+        for (int i = 1; i < population.size(); i++) {
+            if (fitness_function(best_path, cityMatrix) < fitness_function(population.at(i), cityMatrix)) {
+                best_path = population.at(i);
+                index_of_path = i;
+            }
+        }
+        if(!if_exists(new_population,best_path))
+            new_population.push_back(best_path);
+
+        population.erase(population.begin() + index_of_path);
+    }
+    return new_population;
+}
+
+void sort_vector(vector<vector<unsigned>>& vec, int** cityMatrix) {
+    sort(vec.begin(), vec.end(), 
+        [&](const std::vector<unsigned>& a, const std::vector<unsigned>& b) {
+            return fitness_function(a,cityMatrix) > fitness_function(b,cityMatrix);
+        });
+}
+
 
 int main() {
     srand(time(NULL));
@@ -273,6 +350,10 @@ int main() {
     cin >> fileName;
     file.open(fileName, std::ios::in | std::ios::out);
     if (file.is_open()) {
+        cout << "Max time value [s] :";
+        double max_time;
+        cin >> max_time;
+        cout << "starting algorithm ..." << endl;
         getline(file, tempLine);
         getline(file, tempLine);
         citiesNum = atoi(tempLine.c_str());
@@ -300,7 +381,7 @@ int main() {
         }
         getline(file, tempLine);
         hamiltonOpt = atoi(tempLine.c_str());
-
+/*
         cout << "------------city matrix------------" << endl;
 
         for (int i = 0; i < citiesNum; i++) {
@@ -308,69 +389,102 @@ int main() {
                 cout << *(*(cityMatrix + i) + j) << " ";
             cout << endl;
         }
-
-        /*    deklarowanie zmiennych potrzebnych do wykonania algorytmu   */
-        int* firstPath = new int[citiesNum + 1];
-        int* secondPath = new int[citiesNum + 1];
-        //for (int i = 0; i < citiesNum; i++) {
-          //  path[i] = i;
-            //secondPath[i] = i;
-       // }
-        //path[citiesNum] = 0;
-        //secondPath[citiesNum] = 0;
-
+        */
+        
+        int iterations = 0;
+        double PRD;
         clock_t start = clock();
-        int* newPath = new int[citiesNum + 1];
-        newPath[citiesNum] = 0;
-        newPath[0] = 0;
-        int* bestPath = new int[citiesNum + 1];
+       
         
         /*   tutaj zaczyna sie algorytm GA    */
 
-        /* inicjalizacja populacji poczatkowej */
 
-        int generations = 0;
-        vector<int*>population;
-        vector<int*> temp_population;
-            for (int i = 0; i <citiesNum; i++) {
-                population.push_back(randomPath(citiesNum));
+        /* generowanie populacji startowej*/
+        vector<unsigned> first_path, second_path, new_path,best_path;
+        vector<vector<unsigned>> population,new_population,temp_population;
+        int population_size = citiesNum * 2;
+        best_path=random_path(citiesNum);
+        for (int i = 0; i < population_size; i++) {
+            new_path = random_path(citiesNum);
+            if (!if_exists(population, new_path) && fitness_function(best_path,cityMatrix)<1.2*fitness_function(new_path,cityMatrix)) {
+                population.push_back(new_path);
+                if(fitness_function(best_path, cityMatrix) < fitness_function(new_path, cityMatrix))
+                    best_path = new_path;
             }
-        double crossingRate = 0.8;
-        double mutationRate = 0.01;
-        int randomInteger;
-        vector<int*> new_population;
-        while (generations < 1) {
-            /*          faza krzyzowan       */
-            for (int i = 0; i < crossingRate*citiesNum; i++) {
-                tournament_selection_parents(firstPath, secondPath, population, citiesNum, cityMatrix);
-                population.push_back(order_crossover(firstPath, secondPath, citiesNum));
-            }
-            /*          faza mutacji        */ 
-            for (int i = 0; i < mutationRate * citiesNum; i++) {
-                inversion_mutation(population.at(rand() % citiesNum), citiesNum);
-              //  cout << "i mutated!" << endl;
-            }
-
-            /* kopiuje aktualna populacje do tymczasowej listy/vectora*/
-            //new_population.reserve(population.size());
-           
-            new_population = tournament_selection(population, citiesNum, cityMatrix);
-            population.clear();
-            population = new_population;
-            cout << "generation :" << generations << endl;
-            generations++;
-       }
-        cout << "------------first_generation-------------" << endl;
+            else
+                i--;
+        }
+        //sort_vector(population, cityMatrix);
+        //population.resize(population_size);
+        /*cout << "base population " << endl;
         for (int i = 0; i < population.size(); i++) {
-            cout << "iteration :"<<i << endl;
-            printPath(population.at(i), citiesNum + 1);
+            printPath(population.at(i));
+        }*/
+        best_path = get_best_path(population, cityMatrix);
+        double start_prd=100*(double)count_cost(best_path, cityMatrix) / hamiltonOpt;
+        cout << "start best_path : " << start_prd << "%" << endl;
+        int generations = 0;
+        double crossingRate = 0.99;
+        double mutationRate = 0.05;
+        int no_improvement = 0;
+        bool stop_condition = true;
+        while (generations<citiesNum/3 && no_improvement<=3 && stop_condition) {
+            /*          faza krzyzowan       */
+            temp_population = population;
+            for (int i = 0; i < crossingRate * population_size; i++) {
+                tournament_selection_parents(first_path,second_path,temp_population,cityMatrix);
+                new_path = order_crossover(first_path, second_path);
+                if (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) <= mutationRate)
+                    swap_mutation(new_path);
+                if (!if_exists(temp_population, new_path) && !if_exists(new_population, new_path)) {
+
+                    population.push_back(new_path);
+                }
+                else {
+                    swap_mutation(new_path);
+                    if (!if_exists(temp_population, new_path) && !if_exists(new_population, new_path)) {
+                        population.push_back(new_path);
+                    }
+                }
+                new_path = order_crossover(second_path, first_path);
+                if (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) <= mutationRate)
+                    swap_mutation(new_path);
+                if (!if_exists(temp_population, new_path) && !if_exists(new_population, new_path)) {
+                    population.push_back(new_path);
+                }
+                else {
+                    swap_mutation(new_path);
+                    if (!if_exists(temp_population, new_path) && !if_exists(new_population, new_path)) {
+                        population.push_back(new_path);
+                    }
+                }
+                
+            }
+            
+            if (fitness_function(best_path, cityMatrix) < fitness_function(get_best_path(population, cityMatrix), cityMatrix)) {
+                best_path = get_best_path(population, cityMatrix);
+                PRD = (double)count_cost(best_path, cityMatrix) / hamiltonOpt;
+                cout << generations << " " << "(" << PRD * 100 << " %)" << endl;
+                no_improvement = 0;
+            }
+            else
+                no_improvement++;
+            //new_population.clear();
+            //new_population = tournament_selection(population,cityMatrix, population_size);
+            //population.clear();
+            //population = new_population;
+            sort_vector(population,cityMatrix);
+            population.resize(population_size);
+            generations++;
+            clock_t now_time = clock();
+            stop_condition = time_stop(start, now_time, max_time);
         }
-        cout << "------------next_generation-------------" << endl;
-        for (int i = 0; i < new_population.size(); i++) {
-            cout << "iteration :" << i << endl;
-            printPath(new_population.at(i), citiesNum + 1);
+        // population after some time
+       /* cout << "-------------population after sometime --------------" << endl;
+        for (int i = 0; i < population.size(); i++) {
+            cout << i << endl;
+            printPath(population.at(i));
         }
-       
 
         /*   tutaj konczy  sie algorytm GA      */
 
@@ -378,16 +492,15 @@ int main() {
 
         double  elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
         cout << elapsed << " [s]" << endl;
+        PRD = (double)count_cost(best_path, cityMatrix) / hamiltonOpt;
+        cout << "PRD = " << PRD * 100 << " %" << endl;
+        printPath(best_path);
 
         /*        zwalnianie pamieci               */
         for (int i = 0; i < citiesNum; i++)
             delete[] cityMatrix[i];
         delete[]cityMatrix;
 
-        delete[]firstPath;
-        delete[]newPath;
-        delete[]secondPath;
-        delete[]bestPath;
         cout << "end" << endl;
     }
     else cerr << "Dostep do pliku zostal zabroniony!" << endl;
